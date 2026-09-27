@@ -92,6 +92,13 @@ find_compose(){
   return 1
 }
 
+find_back_file(){
+  for f in "$BACK_FILE" "backend/$BACK_FILE"; do
+    [[ -f "$f" ]] && { echo "$f"; return 0; }
+  done
+  return 1
+}
+
 section_content(){
   local file="$1" start="$2" end="$3"
   [[ -f "$file" ]] || return 1
@@ -295,11 +302,12 @@ if $OK; then setp 3 1.00 "Testni kontejner radi, port je mapiran i health ruta o
 # 4 -----------------------------------------------------------------
 log "ZAHTEV 4"
 S=0
-if [[ -f "$BACK_FILE" ]]; then
-  section_content "$BACK_FILE" '^BACKEND[[:space:]]+IMAGE[[:space:]]*$' '^BACKEND[[:space:]]+(CONTAINER|LOGS|HEALTH)[[:space:]]*$' && S=$(add "$S" .25)
-  section_content "$BACK_FILE" '^BACKEND[[:space:]]+CONTAINER[[:space:]]*$' '^BACKEND[[:space:]]+(LOGS|HEALTH)[[:space:]]*$' && S=$(add "$S" .25)
-  section_content "$BACK_FILE" '^BACKEND[[:space:]]+LOGS[[:space:]]*$' '^BACKEND[[:space:]]+HEALTH[[:space:]]*$' && S=$(add "$S" .25)
-  section_content "$BACK_FILE" '^BACKEND[[:space:]]+HEALTH[[:space:]]*$' '' && S=$(add "$S" .25)
+BACK_FILE_PATH="$(find_back_file || true)"
+if [[ -f "$BACK_FILE_PATH" ]]; then
+  section_content "$BACK_FILE_PATH" '^BACKEND[[:space:]]+IMAGE[[:space:]]*$' '^BACKEND[[:space:]]+(CONTAINER|LOGS|HEALTH)[[:space:]]*$' && S=$(add "$S" .25)
+  section_content "$BACK_FILE_PATH" '^BACKEND[[:space:]]+CONTAINER[[:space:]]*$' '^BACKEND[[:space:]]+(LOGS|HEALTH)[[:space:]]*$' && S=$(add "$S" .25)
+  section_content "$BACK_FILE_PATH" '^BACKEND[[:space:]]+LOGS[[:space:]]*$' '^BACKEND[[:space:]]+HEALTH[[:space:]]*$' && S=$(add "$S" .25)
+  section_content "$BACK_FILE_PATH" '^BACKEND[[:space:]]+HEALTH[[:space:]]*$' '' && S=$(add "$S" .25)
 fi
 setp 4 "$S" "0.25 po ispravno popunjenoj sekciji."
 
@@ -457,7 +465,7 @@ for f in env/backend.env env/frontend.env env/database.env; do
   if ! add_to_zip "$f" "$f"; then echo "[UPOZORENJE] Nedostaje $f."; fi
 done
 
-for f in "$BACK_FILE" "$STATUS_FILE" "$SUMMARY"; do
+for f in "${BACK_FILE_PATH:-$BACK_FILE}" "$STATUS_FILE" "$SUMMARY"; do
   if ! add_to_zip "$f" "$(basename "$f")"; then echo "[UPOZORENJE] Nedostaje $f."; fi
 done
 

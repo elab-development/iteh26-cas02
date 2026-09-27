@@ -2,12 +2,12 @@
 **/dist
 .DS_Store
 *.log
-compose.yaml
-compose.yml
-docker-compose.yaml
-docker-compose.yml
-backend/Dockerfile
-backend/dockerfile
+# compose.yaml
+# compose.yml
+# docker-compose.yaml
+# docker-compose.yml
+# backend/Dockerfile
+# backend/dockerfile
 /*.json
 /*.zip
 /*.txt

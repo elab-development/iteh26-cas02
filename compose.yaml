@@ -1,0 +1,60 @@
+name: tn20185006-app
+
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: tn20185006-db
+    env_file:
+      - ./env/database.env
+    networks:
+      - tn20185006-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U student -d reservations"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+
+  backend:
+    image: tn20185006-backend
+    container_name: tn20185006-back
+    env_file:
+      - ./env/backend.env
+    ports:
+      - "5000:5000"
+    networks:
+      - tn20185006-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: tn20185006-frontend
+    container_name: tn20185006-front
+    env_file:
+      - ./env/frontend.env
+    ports:
+      - "7000:3000"
+    networks:
+      - tn20185006-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+networks:
+  tn20185006-network:
+    name: tn20185006-network
+    driver: bridge
+
+volumes:
+  postgres-data:
