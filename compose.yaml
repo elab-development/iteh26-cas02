@@ -25,7 +25,7 @@ services:
     env_file:
       - ./env/frontend.env
     ports:
-      - "7000:3000"
+      - "7000:7000"
 
 volumes:
   postgres-data:
